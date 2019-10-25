@@ -15,29 +15,31 @@ status = bin(0)[2:].zfill(2)
 # 10 - dividing by zero
 # 11 - error (connection and other not specified before)
 
-operation = input("Choose operation type[+, -, *, /, %, ^, ==, sqrt]: ")
+op = bin(0)[2:].zfill(3)
+def switch_func(value, op):
+    return {
+        '+': lambda op: bin(0)[2:].zfill(3),
+        '-': lambda op: bin(1)[2:].zfill(3),
+        '*': lambda op: bin(2)[2:].zfill(3),
+        '/': lambda op: bin(3)[2:].zfill(3),
+        '%': lambda op: bin(4)[2:].zfill(3),
+        '^': lambda op: bin(5)[2:].zfill(3),
+        '==': lambda op: bin(6)[2:].zfill(3),
+        'sqrt': lambda op: bin(7)[2:].zfill(3)
+    }.get(value)(op)
 
-#Change these if you can:
+# take user input
 
-if operation == '+':
-    op = bin(0)[2:].zfill(3)
-if operation == '-':
-    op = bin(1)[2:].zfill(3)
-if operation == '*':
-    op = bin(2)[2:].zfill(3)
-if operation == '/':
-    op = bin(3)[2:].zfill(3)
-if operation == '%':
-    op = bin(4)[2:].zfill(3)
-if operation == '^':
-    op = bin(5)[2:].zfill(3)
-if operation == '==':
-    op = bin(6)[2:].zfill(3)
-if operation == 'sqrt':
-    op = bin(7)[2:].zfill(3)
 
-val1 = input("Insert first value (max: 4 294 967 296): ")
-val2 = input("Insert second value (max: 4 294 967 296): ")
+inp = input('Choose operation type[+, -, *, /, %, ^, ==, sqrt]: ')
+
+
+val1 = int(input("Insert first value (max: 4 294 967 296): "))
+val2 = int(input("Insert second value (max: 4 294 967 296): "))
+
+op = switch_func(inp, op)
+
+
 val1b = bin(int(val1))[2:].zfill(32)
 val2b = bin(int(val2))[2:].zfill(32)
 print("Value 1: " + val1b)
