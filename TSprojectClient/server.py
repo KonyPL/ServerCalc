@@ -104,6 +104,7 @@ while pwr:
                 print("Session id: " + str(sessionId))
                 print("Flags: " + str(flags))
 
+
                 data = op * (2**77) + val1 * (2**45) + val2 * (2**13) + status * (2**11) + sessionId * (2**3) + flags
                 # end of processing data
                 conn.sendall(data.to_bytes(10, 'big'))
