@@ -106,6 +106,11 @@ while pwr:
                     except OverflowError:
                         status = 1
 
+                    # idea TO DO: list which remembers all previous or at least last value (result) maybye on the
+                    # client side we can show val1 + val2 + val3 = result and so on
+                    if (flags / 4) > 0:
+                        flags -= 4
+
                     print("### After calculations ###")
                     print("Result: " + str(val1))
                     print("Status: " + str(status))
