@@ -1,8 +1,7 @@
 import socket
 import random
-import math
 
-HOST = '192.168.43.148'  # Standard loopback interface address (localhost)
+HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 
 print("Server is running!")
@@ -108,7 +107,7 @@ while pwr:
 
                     # idea TO DO: list which remembers all previous or at least last value (result) maybye on the
                     # client side we can show val1 + val2 + val3 = result and so on
-                    if (flags / 4) > 0:
+                    if (int(flags / 4)) > 0:
                         flags -= 4
 
                     print("### After calculations ###")
