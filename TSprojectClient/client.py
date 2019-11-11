@@ -4,9 +4,9 @@ import socket
 PORT = 65432        # The port used by the server
 
 # after connection sever will send sessionId to use
-previousId = 0
-sessionId = 0b00000000
-flags = 0b010
+previousId = 0 # It is to check if sessionId has changed
+sessionId = 0 # The sessionId is 0 which means it's not set
+flags = 0b010 # At start client wants sessionId from server
 # flags:
 # 0-- last message, calculate
 # 1-- next messages coming, wait
@@ -16,6 +16,7 @@ flags = 0b010
 # --1 val1 and val2 are equal
 HOST = ''
 
+# reconnect is a function to use by exception handlers
 def reconnect():
     while True:
         recon = input("Do you want to reconnect? (Yes/No) ")
@@ -24,10 +25,6 @@ def reconnect():
             return True
         elif recon == "No" or recon == "no" or recon == "N" or recon == "n":
             return False
-
-
-# bin(x)[2:].zfill(y) <- might be helpful ; x - value in decimal to change to binary string; y - total length of the
-# value needed
 
 conn = True
 session = True
@@ -40,7 +37,7 @@ while conn:
             HOST = input("Type the server address in IPv4 format (ex. 192.168.43.148): ")
             print("Connecting . . .")
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: # from now on connected socket is referenced as 's'
                 s.connect((HOST, PORT))
                 print("Connected with server!")
                 status = 0b00
@@ -49,33 +46,32 @@ while conn:
                 # 10 - dividing by zero
                 # 11 - error (connection and other not specified before)
                 while session:
-                    # >? - comparison - uses the 3rd flag to signalise if values are equal and returns the bigger one
                     while True:
                         operation = input("Choose operation type[+, -, *, /, %, ^, >?, root]: ")
                         op = 0b000
                         if operation == '+':
-                            op = 0b000
+                            op = 0b000 # + - addition of 2 or more values
                             break
                         if operation == '-':
-                            op = 0b001
+                            op = 0b001 # - - subtaction of 2 or more values (second and all next values are subtracted from the first one)
                             break
                         if operation == '*':
-                            op = 0b010
+                            op = 0b010 # * - multiplication of 2 or more values
                             break
                         if operation == '/':
-                            op = 0b011
+                            op = 0b011 # / - division of 2 or more values (first value is divided by second, and the result is divided by next value, and so on)
                             break
                         if operation == '%':
-                            op = 0b100
+                            op = 0b100 # % - modulo of 2 or more values (first value modulo second, then result modulo next value, and so on)
                             break
                         if operation == '^':
-                            op = 0b101
+                            op = 0b101 # ^ - exponentation of 2 or more values ( first to the power of second, result to the power of next value, and so on)
                             break
-                        if operation == '>?':
-                            op = 0b110
+                        if operation == '>?': 
+                            op = 0b110 # >? - comparison of 2 or more values (works same as above) - uses the 3rd flag to signalise if values are equal and returns the bigger one
                             break
                         if operation == 'root':
-                            op = 0b111
+                            op = 0b111 # root - operation of getting roots. Returns the second value level root of first value 
                             break
 
 
@@ -84,8 +80,8 @@ while conn:
                         try:
                             valuesleft = int(input("Choose with how many values you want to work (at least 2): "))
                             if valuesleft < 2:
-                                raise OverflowError("Value is less than 2! ")
-                            firstTwo = True
+                                raise OverflowError("Value is less than 2! ") # if the amount of values is less than 2 user has to enter it agin
+                            firstTwo = True # this is used to input 2 values at the beginning and then only input one at a time
                             break
                         except ValueError:
                             print("That is not an integer! Try again:")
@@ -94,7 +90,7 @@ while conn:
 
                     # repeat until finishes sending all values
                     while valuesleft > 0:
-                        flags += 4
+                        flags += 4 # if there are more values coming to the server the "next messages coming" flag is set to 1
                         if firstTwo:
                             while True:
                                 try:
@@ -112,7 +108,7 @@ while conn:
                                 except OverflowError as error:
                                     print(str(error) + "Try again:")
                         else:
-                            val1 = result1
+                            val1 = result1 # if these are not the first two values then the first value equals result from previous calculations
 
                         while True:
                             try:
@@ -127,25 +123,21 @@ while conn:
                                 print("That is not an integer! Try again:")
                             except OverflowError as error:
                                 print(str(error) + "Try again:")
+                        
                         valuesleft -= 1
                         if valuesleft == 0:
-                            flags -= 4
-                        # debugging code
-                        # print("Value 1: " + str(val1))
-                        # print("Value 2: " + str(val2))
-                        # print("Operation type: " + str(op))
-                        # print("Status: " + str(status))
-                        # print("Session id: " + str(sessionId))
-                        # print("Flags: " + str(flags))
-                        data = 0
+                            flags -= 4 # if there are no more values the "next messages coming" flag is set to 0
+                        
+                        data = 0 # reseting data for no errors
+                        # packing up all information into one value to change it into byte stream
                         data = op*(2**77) + val1*(2**45) + val2*(2**13) + status*(2**11) + sessionId*(2**3) + flags
 
-                        s.sendall(data.to_bytes(10, 'big'))
-                        data = s.recv(1024)
+                        s.sendall(data.to_bytes(10, 'big')) # sending data in bytes so terver
+                        data = s.recv(1024) # recieving data in bytes from server
 
                         # start of data processing
                         # getting variables
-                        data = int.from_bytes(data, 'big')
+                        data = int.from_bytes(data, 'big') # changing bytes back to integer
                         bitShift = ((2 ** 3), (2 ** 11), (2 ** 13), (2 ** 45), (2 ** 77))
 
                         # getting flags
@@ -177,18 +169,12 @@ while conn:
                         op = int(data / bitShift[4])
 
                         # end of getting variables
-
-                        # debugging code
-                        # print("Result 1: " + str(result1))
-                        # print("Operation type: " + str(op))
-                        # print("Status: " + str(status))
-                        # print("Session id: " + str(sessionId))
-                        # print("Flags: " + str(flags))
-
+                        # checking if sessionId has changed
                         if sessionId != previousId:
                             print("Session id obtained! It's value is " + str(sessionId))
                             previousId = sessionId
-
+                        
+                        # reading errors sent from server
                         if status != 0:
                             if status == 1:
                                 print("### Error! Result of operation caused overflow!")
@@ -197,10 +183,12 @@ while conn:
                             else:
                                 print("### Error! Something went wrong!")
                         else:
+                            # checking flags for value equality
                             if flags == 1 or flags == 3 or flags == 5 or flags == 7:
-                                flags -= 1
+                                flags -= 1 # setting value eqiality flag back to 0
                                 print("Both values are equal")
                             else:
+                                # getting the operation symbol
                                 if op == 0:
                                     operation = ' + '
                                 if op == 1:
@@ -214,8 +202,10 @@ while conn:
                                 if op == 5:
                                     operation = ' ^ '
                                 if op == 6:
+                                    # handling the 'compare' operation
                                     print("The " + str(result1) + " is greater than other")
                                 elif op == 7:
+                                    # handling the 'root' operation 
                                     if val2 == 1:
                                         order = 'st'
                                     elif val2 == 2:
@@ -238,6 +228,7 @@ while conn:
                             session = False
                             conn = False
                             while True:
+                                # check if user wants to shut down the server
                                 serverpwr = input("Do you want to shut server down? (Yes/No) ")
                                 if serverpwr == "Yes" or serverpwr == "yes" or serverpwr == "Y" or serverpwr == "y":
                                     status = 3
@@ -264,6 +255,7 @@ while conn:
                                 elif serverpwr == "No" or serverpwr == "no" or serverpwr == "N" or serverpwr == "n":
                                     break
                             break
+        # handling connection errors
         except ConnectionRefusedError:
             print("### Error! Connection refused by server. It is very probable that the server isn't running or the "
                   "address is wrong.")
